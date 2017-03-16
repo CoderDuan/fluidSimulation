@@ -27,6 +27,17 @@ void Fluid::update() {
 }
 
 void Fluid::advect() {
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            for (int k = 0; k < GRID_SIZE; k++) {
+                Vector3 pos(i, j, k);
+                // advect pressure field
+                Vector3 vel = getVel(i, j, k);
+
+                Vector3 oldPos = pos - vel * DT / DH;
+            }
+        }
+    }
     return;
 }
 
