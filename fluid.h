@@ -24,7 +24,12 @@ class Fluid {
     float* w; // z velocity
     float* p; // pressure
 
-    void advect();
+    Vector3* velCurr;
+    Vector3* velNext;
+    float* pNext; // pressure
+
+    void advectPressure();
+    void advectVelocity();
     void addForce();
     void project();
 
@@ -42,7 +47,7 @@ public:
     }
 
     inline float getw(int x, int y, int z) {
-        return w[x*SIZE_Y*(SIZE_Z+1) + y*SIZE_Z + z];
+        return w[x*SIZE_Y*(SIZE_Z+1) + y*(SIZE_Z+1) + z];
     }
 
     inline Vector3 getVel(int x, int y, int z) {
@@ -51,14 +56,72 @@ public:
                     (getw(x, y, z) + getw(x, y, z+1))/2);
     }
 
+    inline Vector3 getVelCurr(int x, int y, int z) {
+        return velCurr[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z];
+    }
+
+    inline Vector3 getVelCurr(Vector3 pos) {
+        int i = (int)pos.x;
+        int j = (int)pos.y;
+        int k = (int)pos.z;
+
+        float alpha = pos.x - i;
+        float beta  = pos.y - j;
+        float gamma = pos.z - k;
+
+        return (alpha    * beta     * gamma     * getVelCurr(i,   j,   k)
+             + (1-alpha) * beta     * gamma     * getVelCurr(i+1, j,   k)
+             + alpha     * (1-beta) * gamma     * getVelCurr(i,   j+1, k)
+             + (1-alpha) * (1-beta) * gamma     * getVelCurr(i+1, j+1, k)
+             + alpha     * beta     * (1-gamma) * getVelCurr(i,   j,   k+1)
+             + (1-alpha) * beta     * (1-gamma) * getVelCurr(i+1, j,   k+1)
+             + alpha     * (1-beta) * (1-gamma) * getVelCurr(i,   j+1, k+1)
+             + (1-alpha) * (1-beta) * (1-gamma) * getVelCurr(i+1, j+1, k+1));
+    }
+
+    inline void setVelCurr(int x, int y, int z, Vector3 val) {
+        velCurr[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z] = val;
+    }
+
+    inline Vector3 getVelNext(int x, int y, int z) {
+        return velNext[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z];
+    }
+
+    inline void setVelNext(int x, int y, int z, Vector3 val) {
+        velNext[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z] = val;
+    }
+
     inline float getp(int x, int y, int z) {
         return p[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z];
     }
 
+    inline void setpNext(int x, int y, int z, float val) {
+        pNext[x*SIZE_Y*SIZE_Z + y*SIZE_Z + z] = val;
+    }
+
+    inline float getp(Vector3 pos) {
+        int i = (int)pos.x;
+        int j = (int)pos.y;
+        int k = (int)pos.z;
+
+        float alpha = pos.x - i;
+        float beta  = pos.y - j;
+        float gamma = pos.z - k;
+
+        return (alpha    * beta     * gamma     * getp(i,   j,   k)
+             + (1-alpha) * beta     * gamma     * getp(i+1, j,   k)
+             + alpha     * (1-beta) * gamma     * getp(i,   j+1, k)
+             + (1-alpha) * (1-beta) * gamma     * getp(i+1, j+1, k)
+             + alpha     * beta     * (1-gamma) * getp(i,   j,   k+1)
+             + (1-alpha) * beta     * (1-gamma) * getp(i+1, j,   k+1)
+             + alpha     * (1-beta) * (1-gamma) * getp(i,   j+1, k+1)
+             + (1-alpha) * (1-beta) * (1-gamma) * getp(i+1, j+1, k+1));
+    }
+
     inline bool validPos(float i, float j, float k) {
-        return (i >= 0.5f && i <= SIZE_X+0.5f
-                && j >= 0.5f && j <= SIZE_Y+0.5f
-                && k >= 0.5f && k <= SIZE_Z+0.5f);
+        return (i >= 0.0f && i < SIZE_X
+                && j >= 0.0f && j < SIZE_Y
+                && k >= 0.0f && k < SIZE_Z);
     }
 
     inline bool validPos(Vector3 pos) {

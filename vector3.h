@@ -34,6 +34,10 @@ public:
 		return Vector3(x*t, y*t, z*t);
 	}
 
+	friend Vector3 operator * (const float &t, const Vector3 &v) {
+		return Vector3(t*v.x, t*v.y, t*v.z);
+	}
+
 	Vector3 &operator *= (const float &t) {
 		x *= t;
 		y *= t;
